@@ -3,6 +3,7 @@ package httpapi
 import (
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -22,8 +23,8 @@ func NewRouter(cfg *config.Config, database *db.DB) http.Handler {
 	r := chi.NewRouter()
 	r.Use(cors.Handler(cors.Options{
 		AllowOriginFunc: func(_ *http.Request, _ string) bool { return true },
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders: []string{"Accept", "Authorization", "Content-Type"}, ExposedHeaders: []string{"Content-Disposition"},
+		AllowedMethods:  []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:  []string{"Accept", "Authorization", "Content-Type"}, ExposedHeaders: []string{"Content-Disposition"},
 		AllowCredentials: true,
 	}))
 	r.Use(a.optionalAuth)
@@ -40,17 +41,20 @@ func NewRouter(cfg *config.Config, database *db.DB) http.Handler {
 	r.Handle("/uploads/*", http.StripPrefix("/uploads/", http.FileServer(http.Dir(cfg.UploadsDir))))
 	r.Route("/api", func(r chi.Router) {
 		a.authRoutes(r)
-		a.vehicleRoutes(r)
-		a.fillupRoutes(r)
-		a.serviceRoutes(r)
-		a.inventoryRoutes(r)
-		a.upgradeRoutes(r)
-		a.expenseRoutes(r)
-		a.reminderRoutes(r)
-		a.statsRoutes(r)
-		a.appUpdateRoutes(r)
-		a.uploadRoutes(r)
 		a.healthRoutes(r)
+		a.appUpdateRoutes(r)
+		r.Group(func(r chi.Router) {
+			r.Use(a.requireAuth)
+			a.vehicleRoutes(r)
+			a.fillupRoutes(r)
+			a.serviceRoutes(r)
+			a.inventoryRoutes(r)
+			a.upgradeRoutes(r)
+			a.expenseRoutes(r)
+			a.reminderRoutes(r)
+			a.statsRoutes(r)
+			a.uploadRoutes(r)
+		})
 	})
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
@@ -66,15 +70,26 @@ func NewRouter(cfg *config.Config, database *db.DB) http.Handler {
 		http.NotFound(w, r)
 	})
 	if _, err := os.Stat(cfg.PublicDir); err == nil {
-		fs := http.FileServer(http.Dir(cfg.PublicDir))
-		r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
-			path := filepath.Join(cfg.PublicDir, filepath.Clean(r.URL.Path))
-			if info, err := os.Stat(path); err == nil && !info.IsDir() {
-				fs.ServeHTTP(w, r)
-				return
-			}
-			http.ServeFile(w, r, filepath.Join(cfg.PublicDir, "index.html"))
-		})
+		r.Get("/*", a.servePublic)
 	}
 	return r
+}
+
+func (a *API) servePublic(w http.ResponseWriter, r *http.Request) {
+	root := filepath.Clean(a.cfg.PublicDir)
+	index := filepath.Join(root, "index.html")
+	rel := strings.TrimPrefix(path.Clean("/"+r.URL.Path), "/")
+	target := root
+	if rel != "" {
+		target = filepath.Join(root, filepath.FromSlash(rel))
+	}
+	if target != root && !strings.HasPrefix(target, root+string(os.PathSeparator)) {
+		http.ServeFile(w, r, index)
+		return
+	}
+	if info, err := os.Stat(target); err == nil && !info.IsDir() {
+		http.ServeFile(w, r, target)
+		return
+	}
+	http.ServeFile(w, r, index)
 }

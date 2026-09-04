@@ -48,7 +48,15 @@ func RestoreServiceParts(d *db.DB, serviceID string) error {
 }
 
 func ApplyServiceParts(d *db.DB, serviceID string, parts []ServicePartInput) (float64, error) {
-	total := 0.0
+	type line struct {
+		name        string
+		quantity    float64
+		unitCost    float64
+		inventoryID any
+	}
+	prepared := make([]line, 0, len(parts))
+	needed := map[string]float64{}
+	items := map[string]map[string]any{}
 	for _, p := range parts {
 		if p.Quantity <= 0 {
 			continue
@@ -60,25 +68,38 @@ func ApplyServiceParts(d *db.DB, serviceID string, parts []ServicePartInput) (fl
 		var inventoryID any
 		if p.InventoryItemID != nil && fmt.Sprint(p.InventoryItemID) != "" {
 			inventoryID = p.InventoryItemID
-			item, err := d.QueryOne(`SELECT * FROM parts_inventory WHERE id=?`, inventoryID)
-			if err != nil {
-				return 0, err
+			id := fmt.Sprint(inventoryID)
+			item, ok := items[id]
+			if !ok {
+				var err error
+				item, err = d.QueryOne(`SELECT * FROM parts_inventory WHERE id=?`, inventoryID)
+				if err != nil {
+					return 0, err
+				}
+				if item == nil {
+					return 0, fmt.Errorf("inventory item not found: %s", name)
+				}
+				items[id] = item
 			}
-			if item == nil {
-				return 0, fmt.Errorf("inventory item not found: %s", name)
-			}
-			if number(item["quantity_on_hand"]) < p.Quantity {
-				return 0, fmt.Errorf("not enough %q in stock (have %v, need %v)", item["name"], item["quantity_on_hand"], p.Quantity)
+			needed[id] += p.Quantity
+			if number(item["quantity_on_hand"]) < needed[id] {
+				return 0, fmt.Errorf("not enough %q in stock (have %v, need %v)", item["name"], item["quantity_on_hand"], needed[id])
 			}
 			name, unitCost = fmt.Sprint(item["name"]), number(item["unit_cost"])
-			if _, err := d.Exec(`UPDATE parts_inventory SET quantity_on_hand=MAX(0,quantity_on_hand-?),updated_at=datetime('now') WHERE id=?`, p.Quantity, inventoryID); err != nil {
+		}
+		prepared = append(prepared, line{name: name, quantity: p.Quantity, unitCost: unitCost, inventoryID: inventoryID})
+	}
+	total := 0.0
+	for _, p := range prepared {
+		if p.inventoryID != nil {
+			if _, err := d.Exec(`UPDATE parts_inventory SET quantity_on_hand=MAX(0,quantity_on_hand-?),updated_at=datetime('now') WHERE id=?`, p.quantity, p.inventoryID); err != nil {
 				return 0, err
 			}
 		}
-		line := rounded(unitCost*p.Quantity, 2)
-		total += line
+		cost := rounded(p.unitCost*p.quantity, 2)
+		total += cost
 		if _, err := d.Exec(`INSERT INTO service_parts(id,service_id,inventory_item_id,name,quantity,unit_cost,total_cost) VALUES(?,?,?,?,?,?,?)`,
-			db.NewID("sp"), serviceID, inventoryID, name, p.Quantity, unitCost, line); err != nil {
+			db.NewID("sp"), serviceID, p.inventoryID, p.name, p.quantity, p.unitCost, cost); err != nil {
 			return 0, err
 		}
 	}

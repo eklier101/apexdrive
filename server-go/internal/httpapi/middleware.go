@@ -43,6 +43,47 @@ func userFromContext(r *http.Request) *auth.UserPayload {
 	return user
 }
 
+func vehicleOwnerID(vehicle map[string]any) string {
+	if vehicle == nil {
+		return ""
+	}
+	return text(vehicle["user_id"])
+}
+
+func (a *API) ownedVehicle(w http.ResponseWriter, r *http.Request, vehicleID string) (map[string]any, bool) {
+	u := userFromContext(r)
+	if u == nil {
+		writeError(w, http.StatusUnauthorized, "Authentication token required")
+		return nil, false
+	}
+	row, err := a.db.QueryOne(`SELECT * FROM vehicles WHERE id=?`, vehicleID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err)
+		return nil, false
+	}
+	if row == nil {
+		writeError(w, http.StatusNotFound, "Vehicle not found")
+		return nil, false
+	}
+	if owner := vehicleOwnerID(row); owner != "" && owner != u.UserID {
+		writeError(w, http.StatusNotFound, "Vehicle not found")
+		return nil, false
+	}
+	return row, true
+}
+
+func (a *API) vehicleQuery(w http.ResponseWriter, r *http.Request) (string, bool) {
+	id := r.URL.Query().Get("vehicle_id")
+	if id == "" {
+		writeError(w, http.StatusBadRequest, "vehicle_id query parameter is required")
+		return "", false
+	}
+	if _, ok := a.ownedVehicle(w, r, id); !ok {
+		return "", false
+	}
+	return id, true
+}
+
 func writeJSON(w http.ResponseWriter, status int, value any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
@@ -60,16 +101,24 @@ func bodyMap(r *http.Request) (map[string]any, error) {
 }
 
 func text(v any) string {
-	if v == nil { return "" }
+	if v == nil {
+		return ""
+	}
 	return fmt.Sprint(v)
 }
 
 func num(v any) float64 {
 	switch n := v.(type) {
-	case float64: return n
-	case int64: return float64(n)
-	case json.Number: f, _ := n.Float64(); return f
-	default: f, _ := strconv.ParseFloat(text(v), 64); return f
+	case float64:
+		return n
+	case int64:
+		return float64(n)
+	case json.Number:
+		f, _ := n.Float64()
+		return f
+	default:
+		f, _ := strconv.ParseFloat(text(v), 64)
+		return f
 	}
 }
 
@@ -77,20 +126,27 @@ func integer(v any) int { return int(num(v)) }
 
 func truthy(v any) bool {
 	switch x := v.(type) {
-	case bool: return x
-	case float64: return x != 0
-	case string: return x != "" && x != "0" && x != "false"
+	case bool:
+		return x
+	case float64:
+		return x != 0
+	case string:
+		return x != "" && x != "0" && x != "false"
 	}
 	return false
 }
 
 func value(body map[string]any, key string, fallback any) any {
-	if v, ok := body[key]; ok { return v }
+	if v, ok := body[key]; ok {
+		return v
+	}
 	return fallback
 }
 
 func nullable(v any) any {
-	if v == nil || text(v) == "" { return nil }
+	if v == nil || text(v) == "" {
+		return nil
+	}
 	return v
 }
 

@@ -404,6 +404,23 @@ export const api = {
     return res.json();
   },
 
+  async exportBackup(): Promise<void> {
+    const res = await fetchWithBase('/api/stats/export');
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Failed to export backup' }));
+      throw new Error(err.error || 'Failed to export backup');
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vehicle_tracker_backup_${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  },
+
   // Upload image
   async uploadImage(file: File): Promise<{ url: string; filename: string }> {
     const formData = new FormData();

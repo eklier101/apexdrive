@@ -99,8 +99,7 @@ export const SettingsPage: React.FC = () => {
 
   const handleExportBackup = async () => {
     try {
-      const baseUrl = getServerUrl();
-      window.open(`${baseUrl}/api/stats/export`, '_blank');
+      await api.exportBackup();
     } catch (err: any) {
       alert('Export failed: ' + err.message);
     }
