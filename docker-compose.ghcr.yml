@@ -1,0 +1,29 @@
+# Run the prebuilt image (no local compile).
+#   cp .env.example .env    # set JWT_SECRET
+#   docker compose -f docker-compose.ghcr.yml up -d
+#
+# Same image via CLI:
+#   docker pull ghcr.io/eklier101/apexdrive:latest
+#   docker run -d --name apexdrive -p 8090:8090 -e JWT_SECRET=... -v ./data:/app/data ghcr.io/eklier101/apexdrive:latest
+#
+# Pin a version: APEXDRIVE_IMAGE=ghcr.io/eklier101/apexdrive:1.0.22
+
+services:
+  apexdrive:
+    image: ${APEXDRIVE_IMAGE:-ghcr.io/eklier101/apexdrive:latest}
+    container_name: apexdrive
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    environment:
+      - PORT=8090
+      - HOST=0.0.0.0
+      - DATA_DIR=/app/data
+      - PUBLIC_DIR=/app/public
+      - APP_ENV=production
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in .env}
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data

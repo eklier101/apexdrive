@@ -1,0 +1,43 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Background Tachometer Speed Track Arc (Center: 54, 52, Radius: 32) -->
+    <path
+        android:pathData="M 28 71 A 32 32 0 1 1 80 71"
+        android:strokeColor="#1E293B"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- Active Speedometer Progress Arc -->
+    <path
+        android:pathData="M 28 71 A 32 32 0 1 1 76 37"
+        android:strokeColor="#00F0FF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- Apex Needle pointing to performance zone -->
+    <path
+        android:pathData="M 54 52 L 74 32"
+        android:strokeColor="#10B981"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round" />
+
+    <!-- Needle Center Hub -->
+    <path
+        android:pathData="M 54 46 A 6 6 0 1 1 53.9 46 Z"
+        android:fillColor="#0284C7" />
+        
+    <path
+        android:pathData="M 54 49 A 3 3 0 1 1 53.9 49 Z"
+        android:fillColor="#00F0FF" />
+
+    <!-- Aerodynamic Chevron Winglet at Base -->
+    <path
+        android:pathData="M 42 78 L 54 86 L 66 78 L 61 78 L 54 82 L 47 78 Z"
+        android:fillColor="#10B981" />
+</vector>

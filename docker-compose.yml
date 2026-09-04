@@ -1,0 +1,22 @@
+services:
+  vehicle-tracker:
+    image: ghcr.io/eklier101/apexdrive:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vehicle-tracker
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    environment:
+      - PORT=8090
+      - HOST=0.0.0.0
+      - DATA_DIR=/app/data
+      - PUBLIC_DIR=/app/public
+      - APP_ENV=production
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in .env}
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
