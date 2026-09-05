@@ -1,0 +1,29 @@
+services:
+  apexdrive:
+    image: ghcr.io/eklier101/apexdrive:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: apexdrive
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    environment:
+      - PORT=8090
+      - HOST=0.0.0.0
+      - DATA_DIR=/app/data
+      - PUBLIC_DIR=/app/public
+      - APP_ENV=production
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in .env}
+      - SYNC_TOKEN=${SYNC_TOKEN:-}
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8090/api/health || exit 1"]
+      interval: 30s
+      timeout: 8s
+      retries: 5
+      start_period: 40s

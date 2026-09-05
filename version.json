@@ -1,0 +1,5 @@
+{
+  "version": "1.0.23",
+  "versionCode": 10023,
+  "releaseNotes": "APK: server URL on login, fixed launcher icons, reminder auto-reset"
+}
