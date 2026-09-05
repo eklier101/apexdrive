@@ -1,0 +1,5 @@
+{
+  "version": "1.0.28",
+  "versionCode": 10028,
+  "releaseNotes": "Pixel safe layout; Plans inventory/bought UX; fix APK update signing mismatch"
+}
