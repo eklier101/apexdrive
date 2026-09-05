@@ -37,7 +37,7 @@ func NewRouter(cfg *config.Config, database *db.DB) http.Handler {
 		})
 	})
 
-	r.Handle("/uploads/*", http.StripPrefix("/uploads/", http.FileServer(http.Dir(cfg.UploadsDir))))
+	r.Get("/uploads/*", a.serveUpload)
 	r.Route("/api", func(r chi.Router) {
 		a.authRoutes(r)
 		a.vehicleRoutes(r)
