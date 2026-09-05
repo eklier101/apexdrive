@@ -1,0 +1,150 @@
+```markdown
+---
+description: Core repository instructions, tech stack restrictions, and post-update deployment workflow.
+globs: **/*
+alwaysApply: true
+---
+
+# Repository Rules & Constraints
+
+You are operating within this software repository. Strictly enforce all language restrictions, architectural constraints, and post-update workflows outlined below.
+
+---
+
+## 1. Tech Stack & Language Restrictions
+
+### Primary Language: Go (Golang)
+* Write all backend logic, API endpoints, CLI tools, services, automation hooks, and utilities strictly in **Go**.
+* **Forbidden Language:** **NEVER USE PYTHON.** 
+  * Do not write `.py` scripts, setup utilities, or build tools in Python under any circumstances.
+  * Use standard Go (`go run ...`), shell scripts (`sh`/`bash`), or `Makefile` tasks for scripts.
+
+### Mobile & App Frontend (APK Targets)
+* Frontend logic for app targets (like APK builds) may use:
+  * **React Native** (TypeScript / JavaScript)
+  * **HTML5 / CSS3 / JavaScript / TypeScript** (Web Views)
+  * Java/Kotlin or `gomobile` for native device bridge APIs when required.
+
+---
+
+## 2. Mandatory Post-Update Workflow
+
+After executing any code modifications, refactoring, or file changes, you **MUST** run the following pipeline steps sequentially before marking a task complete:
+
+
+```
+
+[ Code Modifications / Commit ]
+│
+▼
+[ Step 1: Sync & Update Dockerfile ]
+│
+▼
+[ Step 2: Rebuild Docker LXC ]
+│
+▼
+[ Step 3: Build & Release APK to GitHub ]
+│
+▼
+[ Step 4: Push to Gitea Repos ]
+│
+▼
+[ Step 5: Push to GitHub Repo ]
+
+```
+
+### Step 1: Sync & Update Dockerfile
+If dependencies, base images, environment variables, exposed ports, or Go/React Native build steps change, you **MUST** update the repository `Dockerfile` accordingly.
+* Keep Multi-stage builds clean and minimal.
+* Ensure all new dependencies are explicitly installed or copied during the build stage.
+
+### Step 2: Rebuild Docker LXC Container
+Rebuild and start the target Docker LXC environment using the updated `Dockerfile` to ensure zero build errors or runtime failures.
+
+```bash
+# Rebuild local container environment
+docker compose build --no-cache
+docker compose up -d
+
+# Alternatively, if triggering via Proxmox/LXC host command:
+pct exec <vmid> -- docker compose -f /path/to/docker-compose.yml up -d --build
+
+```
+
+### Step 3: Build & Release APK on GitHub
+
+Whenever mobile/frontend changes or version bumps occur:
+
+1. Build the release APK binary target.
+2. Create or update a GitHub Release tag and attach the newly generated `.apk` asset using the GitHub CLI (`gh`).
+
+```bash
+# Example Android APK build command
+cd android && ./gradlew assembleRelease
+
+# Create GitHub release and upload APK
+gh release create v1.0.x ./app/build/outputs/apk/release/app-release.apk --title "Release v1.0.x" --notes "Release notes summary"
+# Or update existing release asset:
+# gh release upload v1.0.x ./app/build/outputs/apk/release/app-release.apk --clobber
+
+```
+
+### Step 4: Sync to Internal Gitea Server
+
+Push the updated code to both the **private** and **public** Gitea repositories.
+
+```bash
+# Sync to Private Gitea Repo
+git push gitea-private main
+
+# Sync to Public Gitea Repo
+git push gitea-public main
+
+```
+
+### Step 5: Sync to Remote GitHub
+
+Push final commits and tags to the upstream GitHub repository.
+
+```bash
+# Sync to GitHub
+git push github main --tags
+
+```
+
+---
+
+## 3. Go & Frontend Coding Standards
+
+### Go Code Quality
+
+1. **Formatting:** Always run `gofmt -s` or `goimports` on updated files.
+2. **Error Handling:** Check every error explicitly (`if err != nil`). Never ignore errors or suppress them using `_`.
+3. **Concurrency:** Always manage goroutine lifecycles using `context.Context` and synchronize with `sync.WaitGroup` or channels.
+4. **Dependencies:** Prefer standard library (`net/http`, `os`, `fmt`, `encoding/json`). Run `go mod tidy` after modifying imports.
+
+### React Native / Web Quality
+
+1. **Type Safety:** Use TypeScript with strongly typed props and interfaces.
+2. **Architecture:** Keep UI components modular, clean, and decoupled from business logic.
+
+---
+
+## 4. Verification Checklist
+
+Before finalizing your output, verify:
+
+* [ ] No Python (`.py`) files were created or modified.
+* [ ] Go codebase builds cleanly (`go build ./...`).
+* [ ] Sanitize all public and github files from personal data.
+* [ ] Check for code integrity and for any bugs or errors
+* [ ] `Dockerfile` is updated to reflect any structural or dependency changes.
+* [ ] Docker LXC container successfully rebuilt and confirmed running.
+* [ ] APK built and released/uploaded to GitHub Releases.
+* [ ] Git updates pushed to Gitea Private, Gitea Public, and GitHub.
+
+```
+
+<FollowUp label="Configure automated Makefile" query="Can you generate a Makefile that executes this entire Docker, APK build, GitHub Release, and multi-repo push pipeline automatically?"/>
+
+```
