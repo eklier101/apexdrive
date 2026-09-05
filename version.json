@@ -1,0 +1,5 @@
+{
+  "version": "1.0.29",
+  "versionCode": 10029,
+  "releaseNotes": "Serve intact signed APKs; bake host URL at build; fix status bar safe-area"
+}
