@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+client/dist/
+server/dist/
+server-go/apexdrive
+server-go/apexdrive.exe
+client/android/app/build/
+client/android/.gradle/
+client/android/.idea/
+client/android/local.properties
+client/android/capacitor-cordova-android-plugins/
+
+# Runtime data (DB, uploads, APKs) — root only; not client/src/data/
+/data/
+server/data/
+
+# Secrets and local deploy config
+.env
+.env.local
+deploy.local.env
+deploy.tar.gz
+scripts/sync-account.local.env
+certs/
+*.keystore
+*.jks
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+*.log
+
+# Public export scratch directory
+.public-export/
+
+bundled-apk/*.apk
+bundled-apk/release.json
+
