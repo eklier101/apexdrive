@@ -1,0 +1,35 @@
+# Run the prebuilt image (no local compile).
+#   cp .env.example .env    # set JWT_SECRET
+#   docker compose up -d
+#
+# Pin a version: APEXDRIVE_IMAGE=ghcr.io/eklier101/apexdrive:1.0.31
+
+services:
+  apexdrive:
+    image: ${APEXDRIVE_IMAGE:-ghcr.io/eklier101/apexdrive:latest}
+    container_name: apexdrive
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    environment:
+      - PORT=8090
+      - HOST=0.0.0.0
+      - DATA_DIR=/app/data
+      - PUBLIC_DIR=/app/public
+      - APP_ENV=production
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in .env}
+      - SYNC_TOKEN=${SYNC_TOKEN:-}
+      - APK_BUNDLED_DIR=/app/bundled-apk
+      - APK_GITHUB_REPO=${APK_GITHUB_REPO:-eklier101/apexdrive}
+      - APK_AUTO_FETCH=${APK_AUTO_FETCH:-1}
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8090/api/health || exit 1"]
+      interval: 30s
+      timeout: 8s
+      retries: 5
+      start_period: 40s

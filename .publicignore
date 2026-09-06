@@ -1,0 +1,28 @@
+# Files excluded when exporting the public GitHub tree (see scripts/export-public-tree.ps1)
+deploy-lxc.ps1
+deploy-lxc.sh
+deploy.local.env
+deploy.local.env.example
+MAINTAINERS.md
+.public-export/
+.cursor/
+# Legacy Node API — archived on Gitea branch archive/node-typescript-v1.0.22; public runtime is Go
+server/
+# Private account sync (homelab → family instance)
+scripts/sync-account/
+scripts/sync-account-to-dad.ps1
+scripts/sync-account-to-dad.cmd
+scripts/install-sync-schedule.ps1
+scripts/run-sync-scheduled.ps1
+scripts/sync-account.local.env
+scripts/sync-account.local.env.example
+scripts/deploy-personal-docker.ps1
+scripts/remote-rebuild-personal.sh
+# Maintainer build tooling (public users pull GHCR + Releases APK)
+build-all.ps1
+build-apk.ps1
+build-apk.sh
+scripts/build-signed-apk.ps1
+scripts/bump-version.js
+docker-compose.build.yml
+

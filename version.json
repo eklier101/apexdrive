@@ -1,0 +1,5 @@
+{
+  "version": "1.0.32",
+  "versionCode": 10032,
+  "releaseNotes": "APK integrity checks before download/install; public README and compose cleanup"
+}
