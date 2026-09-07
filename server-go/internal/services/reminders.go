@@ -8,6 +8,8 @@ import (
 )
 
 // SyncVehicleReminders resets each reminder from the latest matching service log.
+// Call this after a service is created, updated, or deleted — not when reading
+// or saving a reminder, or a manual last-performed value is overwritten.
 // Interval rules:
 //   - interval_miles > 0  → next_due_odometer = last_odo + miles
 //   - interval_months > 0 → next_due_date = last_date + months

@@ -23,10 +23,9 @@ func (a *API) listReminders(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	if err := svc.SyncVehicleReminders(a.db, id); err != nil {
-		writeError(w, 500, err)
-		return
-	}
+	// Do not SyncVehicleReminders here: that resets last_serviced from the
+	// latest matching service log and would discard a manual last-performed.
+	// Service create/update/delete already sync intervals.
 	v, _ := a.db.QueryOne(`SELECT purchase_odometer FROM vehicles WHERE id=?`, id)
 	f, _ := a.db.QueryOne(`SELECT MAX(odometer) max_odo FROM fillups WHERE vehicle_id=?`, id)
 	s, _ := a.db.QueryOne(`SELECT MAX(odometer) max_odo FROM services WHERE vehicle_id=?`, id)
@@ -123,7 +122,6 @@ func (a *API) createReminder(w http.ResponseWriter, r *http.Request) {
 		writeError(w, 500, err)
 		return
 	}
-	_ = svc.SyncVehicleReminders(a.db, text(b["vehicle_id"]))
 	row, _ := a.db.QueryOne(`SELECT * FROM service_reminders WHERE id=?`, id)
 	writeJSON(w, 201, row)
 }
@@ -162,7 +160,6 @@ func (a *API) updateReminder(w http.ResponseWriter, r *http.Request) {
 		writeError(w, 500, err)
 		return
 	}
-	_ = svc.SyncVehicleReminders(a.db, text(old["vehicle_id"]))
 	row, _ := a.db.QueryOne(`SELECT * FROM service_reminders WHERE id=?`, id)
 	writeJSON(w, 200, row)
 }
