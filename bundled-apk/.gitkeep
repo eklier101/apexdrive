@@ -1,0 +1,2 @@
+# Place apexdrive_latest.apk + release.json here for Docker image bundling.
+# CI and personal deploy populate this; the runtime copies into /app/data/apks on start.

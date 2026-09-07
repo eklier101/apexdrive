@@ -1,0 +1,73 @@
+name: Bug report
+description: Report a bug or unexpected behavior in ApexDrive
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve ApexDrive. Please fill in as much as you can.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Clear description of the bug
+      placeholder: When I try to..., the app...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps
+      placeholder: |
+        1. Go to...
+        2. Click...
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How are you running ApexDrive?
+      options:
+        - Prebuilt Docker image (ghcr.io)
+        - Built from source (docker compose --build)
+        - Local npm / Go binary
+        - Android APK only
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: App or image version (e.g. 1.0.22, latest)
+      placeholder: 1.0.22
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Paste relevant server logs or attach screenshots (redact secrets)
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I set a custom JWT_SECRET (not the example value) for production
+          required: false
+        - label: I searched existing issues for duplicates
+          required: false

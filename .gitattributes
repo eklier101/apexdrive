@@ -1,0 +1,11 @@
+# Legacy Node/TypeScript API (kept on private Gitea for revert; not the runtime)
+server/** linguist-vendored
+server/** linguist-detectable=false
+
+# Large static vehicle catalog data — not application logic
+client/src/data/vehicleDatabase.ts linguist-generated=true
+
+# Generated / vendor-ish noise
+client/android/** linguist-vendored
+**/package-lock.json linguist-generated=true
+**/go.sum linguist-generated=true

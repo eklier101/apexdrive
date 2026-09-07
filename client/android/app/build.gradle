@@ -1,0 +1,112 @@
+apply plugin: 'com.android.application'
+
+android {
+    namespace "com.apexdrive.app"
+    compileSdk rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "com.apexdrive.app"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 10033
+        versionName "1.0.33"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+
+    // Sideload keystore (GitHub APK / Docker seed). Play uses a separate upload keystore.
+    def sideloadKsPath = System.getenv("APK_KEYSTORE")
+    if (sideloadKsPath == null || sideloadKsPath.isEmpty()) {
+        def candidate = rootProject.file("../../certs/apk-signing/apexdrive-apk.keystore")
+        if (candidate.exists()) sideloadKsPath = candidate.absolutePath
+    }
+    def playKsPath = System.getenv("PLAY_UPLOAD_KEYSTORE")
+    if (playKsPath == null || playKsPath.isEmpty()) {
+        def candidate = rootProject.file("../../certs/apk-signing/apexdrive-play-upload.keystore")
+        if (candidate.exists()) playKsPath = candidate.absolutePath
+    }
+
+    signingConfigs {
+        if (sideloadKsPath != null) {
+            def ksFile = file(sideloadKsPath)
+            if (ksFile.exists()) {
+                sideload {
+                    storeFile ksFile
+                    storePassword System.getenv("APK_STORE_PASS") ?: "apexdrive"
+                    keyAlias System.getenv("APK_KEY_ALIAS") ?: "apexdrive"
+                    keyPassword System.getenv("APK_KEY_PASS") ?: "apexdrive"
+                }
+            }
+        }
+        if (playKsPath != null) {
+            def ksFile = file(playKsPath)
+            if (ksFile.exists()) {
+                playUpload {
+                    storeFile ksFile
+                    storePassword System.getenv("PLAY_UPLOAD_STORE_PASS") ?: System.getenv("APK_STORE_PASS") ?: "apexdrive"
+                    keyAlias System.getenv("PLAY_UPLOAD_KEY_ALIAS") ?: "apexdrive-play"
+                    keyPassword System.getenv("PLAY_UPLOAD_KEY_PASS") ?: System.getenv("APK_KEY_PASS") ?: "apexdrive"
+                }
+            }
+        }
+    }
+
+    flavorDimensions "distribution"
+    productFlavors {
+        play {
+            dimension "distribution"
+        }
+        sideload {
+            dimension "distribution"
+        }
+    }
+
+    def buildingPlay = gradle.startParameter.taskNames.any { it.toLowerCase().contains("play") }
+
+    buildTypes {
+        debug {
+            if (signingConfigs.findByName("sideload") != null) {
+                signingConfig signingConfigs.sideload
+            }
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (buildingPlay && signingConfigs.findByName("playUpload") != null) {
+                signingConfig signingConfigs.playUpload
+            } else if (signingConfigs.findByName("sideload") != null) {
+                signingConfig signingConfigs.sideload
+            }
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}

@@ -1,0 +1,5 @@
+{
+  "version": "1.0.33",
+  "versionCode": 10033,
+  "releaseNotes": "Play packaging: com.apexdrive.app flavors, AAB pipeline, sideload APK retained"
+}

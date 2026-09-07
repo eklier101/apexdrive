@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#080e1a" />
+      <stop offset="50%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+
+    <!-- Neon Brand Gradient -->
+    <linearGradient id="brandNeon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+
+    <!-- Emerald Glow Gradient -->
+    <linearGradient id="emeraldGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#34d399" />
+    </linearGradient>
+
+    <!-- Pulse Glow Filter -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="10" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <!-- Drop Shadow Filter -->
+    <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0284c7" flood-opacity="0.4" />
+    </filter>
+  </defs>
+
+  <!-- Outer Rounded Squircle Badge -->
+  <rect width="512" height="512" rx="116" fill="url(#bgGrad)" />
+  <rect width="504" height="504" x="4" y="4" rx="112" stroke="url(#brandNeon)" stroke-width="4" stroke-opacity="0.35" fill="none" />
+
+  <!-- Speedometer Track Background Arc (Symmetric 240-degree tachometer arc from 145° to 395°) -->
+  <!-- Center: (256, 246), Radius: 156 -->
+  <!-- Start: (-127.8, +89.5) -> (128, 336) -->
+  <!-- Top: (256, 90) -->
+  <!-- End: (+127.8, +89.5) -> (384, 336) -->
+  <path
+    d="M 128 336 A 156 156 0 1 1 384 336"
+    fill="none"
+    stroke="#1e293b"
+    stroke-width="24"
+    stroke-linecap="round"
+  />
+
+  <!-- Glowing Active Tachometer Progress Arc (Starting at 128,336 around top to 366,170 ~75% sweep) -->
+  <path
+    d="M 128 336 A 156 156 0 1 1 384 336"
+    fill="none"
+    stroke="url(#brandNeon)"
+    stroke-width="24"
+    stroke-linecap="round"
+    filter="url(#glow)"
+  />
+
+  <!-- Concentric Inner Precision Tick Marks -->
+  <!-- Center: 256, 246, Radius 126 -->
+  <!-- Left lower tick (210°) -->
+  <line x1="147" y1="309" x2="162" y2="300" stroke="#0284c7" stroke-width="5" stroke-linecap="round" opacity="0.8" />
+  <!-- Left mid tick (180°) -->
+  <line x1="130" y1="246" x2="148" y2="246" stroke="#0284c7" stroke-width="5" stroke-linecap="round" opacity="0.8" />
+  <!-- Left upper tick (135°) -->
+  <line x1="167" y1="157" x2="180" y2="170" stroke="#38bdf8" stroke-width="5" stroke-linecap="round" opacity="0.8" />
+  <!-- Top apex tick (90°) -->
+  <line x1="256" y1="120" x2="256" y2="138" stroke="#38bdf8" stroke-width="6" stroke-linecap="round" opacity="0.9" />
+  <!-- Right upper tick (45°) -->
+  <line x1="345" y1="157" x2="332" y2="170" stroke="#10b981" stroke-width="5" stroke-linecap="round" opacity="0.8" />
+  <!-- Right mid tick (0°) -->
+  <line x1="382" y1="246" x2="364" y2="246" stroke="#10b981" stroke-width="5" stroke-linecap="round" opacity="0.8" />
+  <!-- Right lower tick (330°) -->
+  <line x1="365" y1="309" x2="350" y2="300" stroke="#10b981" stroke-width="5" stroke-linecap="round" opacity="0.8" />
+
+  <!-- Apex Needle (Points to high speed ~40° from center 256, 246) -->
+  <g filter="url(#dropShadow)">
+    <!-- Needle Blade -->
+    <polygon points="250,242 262,250 354,152 344,142" fill="url(#brandNeon)" />
+    <!-- Center Hub Core -->
+    <circle cx="256" cy="246" r="26" fill="#0f172a" stroke="url(#brandNeon)" stroke-width="7" />
+    <circle cx="256" cy="246" r="10" fill="#38bdf8" />
+  </g>
+
+  <!-- Turbo / Aerodynamic Apex Chevron Wings at Bottom -->
+  <g transform="translate(256, 372)">
+    <!-- Upper / Primary Wing -->
+    <path
+      d="M -56 -8 L 0 28 L 56 -8 L 34 -8 L 0 14 L -34 -8 Z"
+      fill="url(#emeraldGlow)"
+      filter="url(#glow)"
+      opacity="0.95"
+    />
+    <!-- Lower Accent Wing -->
+    <path
+      d="M -38 12 L 0 40 L 38 12 L 24 12 L 0 28 L -24 12 Z"
+      fill="#38bdf8"
+      opacity="0.8"
+    />
+  </g>
+</svg>

@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  body {
+    @apply bg-slate-950 text-slate-100 font-sans;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Safe area padding for mobile notch/home bars / PWA / Capacitor */
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/*
+ * Clear the system status bar / notch.
+ * Mobile browser tabs already sit below chrome — only force a floor for
+ * installed PWA / Capacitor where content draws under the status bar and
+ * env(safe-area-inset-top) is sometimes 0 on Android.
+ */
+.app-header-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+@media (max-width: 767px) {
+  @media (display-mode: standalone),
+    (display-mode: fullscreen),
+    (display-mode: minimal-ui) {
+    .app-header-safe {
+      padding-top: max(env(safe-area-inset-top, 0px), 2.75rem);
+    }
+  }
+
+  html.is-native .app-header-safe {
+    padding-top: max(env(safe-area-inset-top, 0px), 2.75rem);
+  }
+}
+
+.app-main-pad {
+  padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 768px) {
+  .app-main-pad {
+    padding-bottom: 2rem;
+  }
+}
+
+/* Hide scrollbar on mobile nav strip */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
