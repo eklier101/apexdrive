@@ -22,14 +22,14 @@ func fillupCosts(b map[string]any,old map[string]any)(float64,float64,float64){
 func roundedHTTP(v float64,p int)float64{m:=1.0;for i:=0;i<p;i++{m*=10};return float64(int(v*m+0.5))/m}
 func (a *API) createFillup(w http.ResponseWriter,r *http.Request){
 	b,err:=bodyMap(r);if err!=nil{writeError(w,400,"Invalid JSON");return};if text(b["vehicle_id"])==""{writeError(w,400,"vehicle_id, odometer, and gallons are required");return};if _,ok:=b["odometer"];!ok{writeError(w,400,"vehicle_id, odometer, and gallons are required");return};if _,ok:=b["gallons"];!ok{writeError(w,400,"vehicle_id, odometer, and gallons are required");return}
-	gal,price,total:=fillupCosts(b,map[string]any{"gallons":0,"price_per_unit":0,"total_cost":0});id:=db.NewID("flp")
+	gal,price,total:=fillupCosts(b,map[string]any{"gallons":0,"price_per_unit":0,"total_cost":0});if gal<=0{writeError(w,400,"gallons must be greater than 0");return};id:=db.NewID("flp")
 	_,err=a.db.Exec(`INSERT INTO fillups(id,vehicle_id,date,odometer,gallons,price_per_unit,total_cost,is_full_tank,is_missed,fuel_grade,station,latitude,longitude,notes,receipt_image) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 		id,b["vehicle_id"],value(b,"date",today()),num(b["odometer"]),gal,price,total,boolInt(value(b,"is_full_tank",true)),boolInt(value(b,"is_missed",false)),value(b,"fuel_grade","Regular"),nullable(b["station"]),nullable(b["latitude"]),nullable(b["longitude"]),nullable(b["notes"]),nullable(b["receipt_image"]))
 	if err!=nil{writeError(w,500,err);return};if err=services.RecalculateVehicleFillups(a.db,text(b["vehicle_id"]));err!=nil{writeError(w,500,err);return};row,_:=a.db.QueryOne(`SELECT * FROM fillups WHERE id=?`,id);writeJSON(w,201,row)
 }
 func boolInt(v any)int{if truthy(v){return 1};return 0}
 func (a *API) updateFillup(w http.ResponseWriter,r *http.Request){
-	id:=chi.URLParam(r,"id");old,err:=a.db.QueryOne(`SELECT * FROM fillups WHERE id=?`,id);if err!=nil{writeError(w,500,err);return};if old==nil{writeError(w,404,"Fillup not found");return};b,err:=bodyMap(r);if err!=nil{writeError(w,400,"Invalid JSON");return};gal,price,total:=fillupCosts(b,old)
+	id:=chi.URLParam(r,"id");old,err:=a.db.QueryOne(`SELECT * FROM fillups WHERE id=?`,id);if err!=nil{writeError(w,500,err);return};if old==nil{writeError(w,404,"Fillup not found");return};b,err:=bodyMap(r);if err!=nil{writeError(w,400,"Invalid JSON");return};gal,price,total:=fillupCosts(b,old);if gal<=0{writeError(w,400,"gallons must be greater than 0");return}
 	get:=func(k string)any{if v,ok:=b[k];ok{return v};return old[k]}
 	_,err=a.db.Exec(`UPDATE fillups SET date=?,odometer=?,gallons=?,price_per_unit=?,total_cost=?,is_full_tank=?,is_missed=?,fuel_grade=?,station=?,latitude=?,longitude=?,notes=?,receipt_image=?,updated_at=datetime('now') WHERE id=?`,
 		get("date"),num(get("odometer")),gal,price,total,boolInt(get("is_full_tank")),boolInt(get("is_missed")),get("fuel_grade"),get("station"),get("latitude"),get("longitude"),get("notes"),get("receipt_image"),id)

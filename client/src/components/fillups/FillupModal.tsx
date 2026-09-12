@@ -123,6 +123,10 @@ export const FillupModal: React.FC<FillupModalProps> = ({
       alert('Please fill in odometer, gallons, and price/total.');
       return;
     }
+    if (!(parseFloat(gallons) > 0)) {
+      alert('Gallons must be greater than 0.');
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -257,6 +261,7 @@ export const FillupModal: React.FC<FillupModalProps> = ({
               <input
                 type="number"
                 step="0.001"
+                min="0.001"
                 required
                 placeholder="12.450"
                 value={gallons}

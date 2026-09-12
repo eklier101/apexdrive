@@ -27,6 +27,10 @@ func rounded(v float64, places int) float64 {
 	return math.Round(v*p) / p
 }
 
+func isFinite(v float64) bool {
+	return !math.IsInf(v, 0) && !math.IsNaN(v)
+}
+
 func RecalculateVehicleFillups(d *db.DB, vehicleID string) error {
 	rows, err := d.Query(`SELECT * FROM fillups WHERE vehicle_id=? ORDER BY odometer ASC,date ASC`, vehicleID)
 	if err != nil {
@@ -44,11 +48,24 @@ func RecalculateVehicleFillups(d *db.DB, vehicleID string) error {
 		} else if last != nil {
 			dist := number(cur["odometer"]) - number(last["odometer"])
 			if dist > 0 {
-				accumulated += number(cur["gallons"])
+				if g := number(cur["gallons"]); g > 0 {
+					accumulated += g
+				}
 				if full {
-					mpg = rounded(dist/accumulated, 2)
-					distance = rounded(dist, 1)
-					cost = rounded(number(cur["total_cost"])/dist, 4)
+					// Zero gallons (or a 0-sum interval) must not write +Inf/+NaN —
+					// encoding/json cannot serialize those, so GET /fillups and /stats/trends
+					// would return truncated bodies and the UI would show an empty log.
+					if accumulated > 0 {
+						if v := rounded(dist/accumulated, 2); isFinite(v) {
+							mpg = v
+						}
+						if v := rounded(number(cur["total_cost"])/dist, 4); isFinite(v) {
+							cost = v
+						}
+					}
+					if v := rounded(dist, 1); isFinite(v) {
+						distance = v
+					}
 					last, accumulated = cur, 0
 				}
 			}

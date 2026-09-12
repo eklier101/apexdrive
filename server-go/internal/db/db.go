@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"embed"
 	"fmt"
+	"math"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -109,6 +110,9 @@ func (d *DB) Query(query string, args ...any) ([]map[string]any, error) {
 		for i, c := range cols {
 			if b, ok := vals[i].([]byte); ok {
 				m[c] = string(b)
+			} else if f, ok := vals[i].(float64); ok && (math.IsInf(f, 0) || math.IsNaN(f)) {
+				// encoding/json cannot emit Inf/NaN; treat as unset so list/export APIs stay valid.
+				m[c] = nil
 			} else {
 				m[c] = vals[i]
 			}
